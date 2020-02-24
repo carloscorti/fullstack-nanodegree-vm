@@ -1,3 +1,7 @@
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from database_setup import Base, Restaurant
+
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import cgi
 
@@ -9,49 +13,32 @@ class webserverHanlder (BaseHTTPRequestHandler):
     def do_GET(self):
 
         try:
-            if self.path.endswith("/hello"):
+            engine = create_engine('sqlite:///restaurantmenu.db')
+            Base.metadata.bind = engine
+            DBSession = sessionmaker(bind = engine)
+            ses = DBSession()
+
+            restoList = ses.query(Restaurant).all()
+            if self.path.endswith("/restaurant"):
                 self.send_response(200)
                 self.send_header('Content-Type', 'text/html')
                 self.end_headers()
 
+
+
                 output=""
                 output+="<html><body>"
-                output+="<h1>Hello!</h1>"
-                output+= """
-                    <form method='POST' enctype='multipart/form-data' action='/hello'
-                        <h2>What would you like me to say?</h2>
-                        <input name='message' type='text'>
-                        <input type='submit' value='submit'>
-                    </form>
-                        """
+                output+="<h1>Restaurant list</h1>"
+                output+="<div><ul>"
+
+                for resto in restoList:
+                    output+="<li>%s</li><br>" % resto.name
+
+                output+="</ul></div>"
                 output+="</body></html>"
                 self.wfile.write(output)
                 print output
-                return
-
-            if self.path.endswith("/hola"):
-                self.send_response(200)
-                self.send_header('Content-Type', 'text/html')
-                self.end_headers()
-                output=""
-                output+="<html><body>"
-                output+="""    
-                            <h1>&#161Hola!</h1>
-                            <a href='/hello'>Back to Hello</a>   
-                        """
-                output+= """
-                    <form method='POST' enctype='multipart/form-data' action='/hello'
-                        <h2>What would you like me to say?</h2>
-                        <input name='message' type='text'>
-                        <input type='submit' value='submit'>
-                    </form>
-                        """
-                output+="</html></body>"
-
-                self.wfile.write(output)
-                print output
-                return
-            
+                return            
             
         except IOError:
             self.send_error(404, "File not Fount %s" % self.path)
