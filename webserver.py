@@ -29,6 +29,7 @@ class webserverHanlder (BaseHTTPRequestHandler):
                 output=""
                 output+="<html><body>"
                 output+="<h1>Restaurant list</h1>"
+                output+="<a href='/restaurants/new'>Create a new Restaurant</a>"
                 output+="<div><ul>"
 
                 for resto in restoList:
@@ -43,10 +44,33 @@ class webserverHanlder (BaseHTTPRequestHandler):
                 output+="</body></html>"
                 self.wfile.write(output)
                 print output
-                return            
-            
+                return 
+
+            if self.path.endswith("/restaurants/new"):
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html')
+                self.end_headers()
+
+
+
+                output=""
+                output+="<html><body>"
+                output+="<h1>Create new Restaurants!!</h1>"
+                output+= """
+                    <form method='POST' enctype='multipart/form-data' action='/webserver.py'
+                        <label for="name">Nombre</label>
+                        <input type="text" id="name" name="name">
+                        <button type='submit'>Upload</button>
+                    </form>
+                        """
+                output+="</body></html>"
+                self.wfile.write(output)
+                print output
+                return     
+
         except IOError:
             self.send_error(404, "File not Fount %s" % self.path)
+            server.socket.close()
     
     def do_POST(self):
         try:
