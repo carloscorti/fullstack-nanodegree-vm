@@ -32,7 +32,12 @@ class webserverHanlder (BaseHTTPRequestHandler):
                 output+="<div><ul>"
 
                 for resto in restoList:
-                    output+="<li>%s</li><br>" % resto.name
+                    output+="<li>%s</li>" % resto.name
+                    output+="<a href=#>Edit Restaurant</a>"
+                    output+="<br>"
+                    output+="<a href=#>Delete Restaurant</a>"
+                    output+="<br><br>"
+
 
                 output+="</ul></div>"
                 output+="</body></html>"
