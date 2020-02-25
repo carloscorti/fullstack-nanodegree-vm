@@ -9,17 +9,20 @@ import cgi
 
 #handler, que codigo va a ejecutar dependiendo del HTTP reuqest enviado al servidor
 
-class webserverHanlder (BaseHTTPRequestHandler):
+class webserverHanlder (BaseHTTPRequestHandler):      
+    
+    engine = create_engine('sqlite:///restaurantmenu.db')
+    Base.metadata.bind = engine
+    DBSession = sessionmaker(bind = engine)
+    ses = DBSession()
+ 
     def do_GET(self):
 
         try:
-            engine = create_engine('sqlite:///restaurantmenu.db')
-            Base.metadata.bind = engine
-            DBSession = sessionmaker(bind = engine)
-            ses = DBSession()
 
-            restoList = ses.query(Restaurant).all()
+            restoList = self.ses.query(Restaurant.name).all()
 
+            #restaurant list
             if self.path.endswith("/restaurant"):
                 self.send_response(200)
                 self.send_header('Content-Type', 'text/html')
@@ -31,11 +34,9 @@ class webserverHanlder (BaseHTTPRequestHandler):
                 output+="<a href='/restaurants/new'>Create a new Restaurant</a>"
                 output+="<div><ul>"
 
-                output+="<li>%s</li>" % ses.query(Restaurant).count()
-
                 for resto in restoList:
-                    output+="<li>%s</li>" % resto.name
-                    output+="<a href=#>Edit Restaurant</a>"
+                    output+="<li>%s</li>" % resto
+                    output+="<a href='restaurant/id/edit'>Edit Restaurant</a>"
                     output+="<br>"
                     output+="<a href=#>Delete Restaurant</a>"
                     output+="<br><br>"
@@ -46,7 +47,7 @@ class webserverHanlder (BaseHTTPRequestHandler):
                 print output
                 return 
 
-
+            #new reaturant entry
             if self.path.endswith("/restaurants/new"):
                 self.send_response(200)
                 self.send_header('Content-Type', 'text/html')
@@ -56,52 +57,106 @@ class webserverHanlder (BaseHTTPRequestHandler):
                 output+="<html><body>"
                 output+="<h1>Create new Restaurants!!</h1>"
                 output+= """
+                    <div>
                     <form method='POST' enctype='multipart/form-data' action='/restaurants/new'>
                         <label for="name">Restaurant Name</label>
                         <input type="text" id="name" name="name">
                         <button type='submit'>Upload</button>
-                    </form> 
+                    </form>
+                    </div> 
                     """
                 output+="<a href='/restaurant'>Return to Restaurants List</a>"                        
                 output+="</body></html>"
                 self.wfile.write(output)
                 print output
-                return     
+                return
+
+
+            #modify restaurant
+            if self.path.endswith("/restaurant/id/edit"):
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html')
+                self.end_headers()
+
+                output=""
+                output+="<html><body>"
+                output+="<h1>Edit Restaurant</h1>"
+                output+="<div><form method='POST' enctype='multipart/form-data' action='/restaurant/id/edit'>"
+                output+="<label for='select-restaurant'>Select Restaurant</label>"
+                output+="<select name='name' id='select-restaurant'>"
+                for resto in restoList:
+                    output+= "<option>%s</option>" %resto
+                output+="</select><br><br>"
+                output+="""
+                        <label for="rename-restaurant">Rename Restaurant</label>
+                        <input type="text" id="rename-restaurant" name="reName">
+                        <button type='submit'>Upload</button>
+                        """
+                output+="</form></div>"
+                output+="<a href='/restaurant'>Return to Restaurants List</a>"                        
+                output+="</body></html>"
+                self.wfile.write(output)
+                print output
+                return    
 
         except IOError:
             self.send_error(404, "File not Fount %s" % self.path)
-            server.socket.close()
     
     def do_POST(self):
         try:
             self.send_response(301)
             self.end_headers()
 
+            #CREATE new restaurabd post
+            if self.path.endswith("/restaurants/new"):
+                ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+                if ctype == 'multipart/form-data':
+                    fields = cgi.parse_multipart(self.rfile, pdict)
+                    restoName = fields.get('name')
 
-            ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
-            if ctype == 'multipart/form-data':
-                fields = cgi.parse_multipart(self.rfile, pdict)
-                restoName = fields.get('name')
-            
-            engine = create_engine('sqlite:///restaurantmenu.db')
-            Base.metadata.bind = engine
-            DBSession = sessionmaker(bind = engine)
-            ses = DBSession()
+                newResto = Restaurant(name = restoName[0])
+                self.ses.add(newResto)
+                self.ses.commit()
 
-            newResto = Restaurant(name = restoName[0])
-            ses.add(newResto)
-            ses.commit()
+                output=""
+                output+="<html><body>"
+                output+="<h1>Geat!!!!</h1>"
+                output+="<h2>%s was uploaded succesfully!!</h2>" % restoName[0]
+                output+="<a href='/restaurants/new'>Create a new Restaurant</a><br>"
+                output+="<a href='/restaurant'>Return to Restaurants List</a>"
+                output+="</body></html>"
 
-            output=""
-            output+="<html><body>"
-            output+="<h1>Geat!!!!</h1>"
-            output+="<h2>%s was uploaded succesfully!!</h2>" % restoName[0]
-            output+="<a href='/restaurants/new'>Create a new Restaurant</a><br>"
-            output+="<a href='/restaurant'>Return to Restaurants List</a>"
-            output+="</body></html>"
+                self.wfile.write(output)
+                print output
 
-            self.wfile.write(output)
-            print output
+            #UPDATE edit restaurant name
+            if self.path.endswith("/restaurant/id/edit"):
+                ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+                if ctype == 'multipart/form-data':
+                    fields = cgi.parse_multipart(self.rfile, pdict)
+                    restoName = fields.get('name')
+                    restoReName = fields.get('reName')          
+
+                reNameResto = self.ses.query(Restaurant).filter_by(name=restoName[0]).one()
+                reNameResto.name = restoReName[0]
+                self.ses.add(reNameResto)
+                self.ses.commit()
+
+                checkChange = self.ses.query(Restaurant).filter_by(name=restoReName[0]).one()
+
+                
+
+                output=""
+                output+="<html><body>"
+                output+="<h1>Awesome!!!!</h1>"
+                output+="<h2>%s was renamed to %s!!</h2>" % (restoName[0], checkChange.name)
+                output+="<a href='/restaurants/new'>Create a new Restaurant</a><br>"
+                output+="<a href='/restaurant'>Return to Restaurants List</a><br>"
+                output+="<a href='/restaurant/id/edit'>Edit Restaurant</a>"
+                output+="</body></html>"
+
+                self.wfile.write(output)
+                print output
 
         except:
             pass
@@ -109,6 +164,7 @@ class webserverHanlder (BaseHTTPRequestHandler):
 
 
 def main():
+    
     try:
         port = 8080
         server = HTTPServer(('', port), webserverHanlder)
@@ -120,7 +176,6 @@ def main():
     except KeyboardInterrupt: #se lanza cuand el usuario mantiene Ctrl+C
         print "Ctrl+C entered, stopping web server..."
         server.socket.close()
-    
     
 #al final para ejecutar inmediatamente main cuando el python interpreter ejecute el script
 if __name__ == '__main__':
