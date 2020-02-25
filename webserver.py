@@ -19,18 +19,19 @@ class webserverHanlder (BaseHTTPRequestHandler):
             ses = DBSession()
 
             restoList = ses.query(Restaurant).all()
+
             if self.path.endswith("/restaurant"):
                 self.send_response(200)
                 self.send_header('Content-Type', 'text/html')
                 self.end_headers()
-
-
 
                 output=""
                 output+="<html><body>"
                 output+="<h1>Restaurant list</h1>"
                 output+="<a href='/restaurants/new'>Create a new Restaurant</a>"
                 output+="<div><ul>"
+
+                output+="<li>%s</li>" % ses.query(Restaurant).count()
 
                 for resto in restoList:
                     output+="<li>%s</li>" % resto.name
@@ -39,30 +40,29 @@ class webserverHanlder (BaseHTTPRequestHandler):
                     output+="<a href=#>Delete Restaurant</a>"
                     output+="<br><br>"
 
-
                 output+="</ul></div>"
                 output+="</body></html>"
                 self.wfile.write(output)
                 print output
                 return 
 
+
             if self.path.endswith("/restaurants/new"):
                 self.send_response(200)
                 self.send_header('Content-Type', 'text/html')
                 self.end_headers()
 
-
-
                 output=""
                 output+="<html><body>"
                 output+="<h1>Create new Restaurants!!</h1>"
                 output+= """
-                    <form method='POST' enctype='multipart/form-data' action='/webserver.py'
-                        <label for="name">Nombre</label>
+                    <form method='POST' enctype='multipart/form-data' action='/restaurants/new'>
+                        <label for="name">Restaurant Name</label>
                         <input type="text" id="name" name="name">
                         <button type='submit'>Upload</button>
-                    </form>
-                        """
+                    </form> 
+                    """
+                output+="<a href='/restaurant'>Return to Restaurants List</a>"                        
                 output+="</body></html>"
                 self.wfile.write(output)
                 print output
@@ -77,32 +77,34 @@ class webserverHanlder (BaseHTTPRequestHandler):
             self.send_response(301)
             self.end_headers()
 
+
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
             if ctype == 'multipart/form-data':
                 fields = cgi.parse_multipart(self.rfile, pdict)
-                messagecontent = fields.get('message')
+                restoName = fields.get('name')
+            
+            engine = create_engine('sqlite:///restaurantmenu.db')
+            Base.metadata.bind = engine
+            DBSession = sessionmaker(bind = engine)
+            ses = DBSession()
+
+            newResto = Restaurant(name = restoName[0])
+            ses.add(newResto)
+            ses.commit()
 
             output=""
             output+="<html><body>"
-            output+= "<h2>Ok how about this</h2>"
-            output+= "<h1>%s</h1>" % messagecontent[0]
-
-            output+= """
-                        <form method='POST' enctype='multipart/form-data' action='/hello'
-                            <h2>What would you like me to say <strong>now</strong>?</h2>
-                            <input name='message' type='text'>
-                            <input type='submit' value='submit'>
-                        </form>
-                            """
-            output+="</html></body>"
+            output+="<h1>Geat!!!!</h1>"
+            output+="<h2>%s was uploaded succesfully!!</h2>" % restoName[0]
+            output+="<a href='/restaurants/new'>Create a new Restaurant</a><br>"
+            output+="<a href='/restaurant'>Return to Restaurants List</a>"
+            output+="</body></html>"
 
             self.wfile.write(output)
             print output
 
         except:
             pass
-
-
 
 
 
