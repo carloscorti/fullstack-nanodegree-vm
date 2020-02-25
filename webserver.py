@@ -20,13 +20,15 @@ class webserverHanlder (BaseHTTPRequestHandler):
 
         try:
 
-            restoList = self.ses.query(Restaurant.name).all()
+            #restoList = self.ses.query(Restaurant.name).all()
 
             #restaurant list
             if self.path.endswith("/restaurant"):
                 self.send_response(200)
                 self.send_header('Content-Type', 'text/html')
                 self.end_headers()
+                
+                restoList = self.ses.query(Restaurant).all()
 
                 output=""
                 output+="<html><body>"
@@ -35,8 +37,8 @@ class webserverHanlder (BaseHTTPRequestHandler):
                 output+="<div><ul>"
 
                 for resto in restoList:
-                    output+="<li>%s</li>" % resto
-                    output+="<a href='restaurant/id/edit'>Edit Restaurant</a>"
+                    output+="<li>%s</li>" % resto.name
+                    output+="<a href='restaurant/%s/edit'>Edit Restaurant</a>" % resto.id
                     output+="<br>"
                     output+="<a href=#>Delete Restaurant</a>"
                     output+="<br><br>"
@@ -73,22 +75,21 @@ class webserverHanlder (BaseHTTPRequestHandler):
 
 
             #modify restaurant
-            if self.path.endswith("/restaurant/id/edit"):
+            if len(self.path.split("/")) == 4 and self.path.split("/")[1] == ("restaurant") and self.path.endswith("/edit") and ( int(self.path.split("/")[2]) <= self.ses.query(Restaurant).count() ) and ( int(self.path.split("/")[2]) > 0 ):
+                
                 self.send_response(200)
                 self.send_header('Content-Type', 'text/html')
                 self.end_headers()
 
+                toModify = self.ses.query(Restaurant).filter_by(id= ( int(self.path.split("/")[2]) ) ).one()
+ 
                 output=""
                 output+="<html><body>"
                 output+="<h1>Edit Restaurant</h1>"
-                output+="<div><form method='POST' enctype='multipart/form-data' action='/restaurant/id/edit'>"
-                output+="<label for='select-restaurant'>Select Restaurant</label>"
-                output+="<select name='name' id='select-restaurant'>"
-                for resto in restoList:
-                    output+= "<option>%s</option>" %resto
-                output+="</select><br><br>"
+                output+="<h2>%s</h2>" % toModify.name
+                output+="<div><form method='POST' enctype='multipart/form-data' action='/restaurant/%s/edit'>" % toModify.id
                 output+="""
-                        <label for="rename-restaurant">Rename Restaurant</label>
+                        <label for="rename-restaurant">New Name</label>
                         <input type="text" id="rename-restaurant" name="reName">
                         <button type='submit'>Upload</button>
                         """
@@ -97,7 +98,7 @@ class webserverHanlder (BaseHTTPRequestHandler):
                 output+="</body></html>"
                 self.wfile.write(output)
                 print output
-                return    
+                return            
 
         except IOError:
             self.send_error(404, "File not Fount %s" % self.path)
@@ -130,26 +131,25 @@ class webserverHanlder (BaseHTTPRequestHandler):
                 print output
 
             #UPDATE edit restaurant name
-            if self.path.endswith("/restaurant/id/edit"):
+            if len(self.path.split("/")) == 4 and self.path.split("/")[1] == ("restaurant") and self.path.endswith("/edit") and ( int(self.path.split("/")[2]) <= self.ses.query(Restaurant).count() ) and ( int(self.path.split("/")[2]) > 0 ):
                 ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
                 if ctype == 'multipart/form-data':
                     fields = cgi.parse_multipart(self.rfile, pdict)
-                    restoName = fields.get('name')
-                    restoReName = fields.get('reName')          
+                    oldRestoId = int(self.path.split("/")[2])
+                    newName = fields.get('reName')
 
-                reNameResto = self.ses.query(Restaurant).filter_by(name=restoName[0]).one()
-                reNameResto.name = restoReName[0]
-                self.ses.add(reNameResto)
+                modifyResto = self.ses.query(Restaurant).filter_by(id= oldRestoId ).one()
+                oldRestoName = modifyResto.name
+                modifyResto.name = newName[0]
+                self.ses.add(modifyResto)
                 self.ses.commit()
 
-                checkChange = self.ses.query(Restaurant).filter_by(name=restoReName[0]).one()
-
-                
+                checkChange = self.ses.query(Restaurant).filter_by(name=newName[0]).one()
 
                 output=""
                 output+="<html><body>"
                 output+="<h1>Awesome!!!!</h1>"
-                output+="<h2>%s was renamed to %s!!</h2>" % (restoName[0], checkChange.name)
+                output+="<h2>%s was renamed to %s!!</h2>" % (oldRestoName, checkChange.name)
                 output+="<a href='/restaurants/new'>Create a new Restaurant</a><br>"
                 output+="<a href='/restaurant'>Return to Restaurants List</a><br>"
                 output+="<a href='/restaurant/id/edit'>Edit Restaurant</a>"
