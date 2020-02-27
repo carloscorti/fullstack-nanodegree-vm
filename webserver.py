@@ -225,7 +225,7 @@ class webserverHanlder (BaseHTTPRequestHandler):
             #DELETE delete restaurant from restaurantmenu.db
             if self.checkPathLen(3) and self.path.endswith("/delete") and self.checkIdChunk(1):
 
-                deleteRestoId = int(self.path.split("/")[1])
+                deleteRestoId = int(self.pathChunk(1))
 
                 deleteResto = self.ses.query(Restaurant).filter_by(id= deleteRestoId ).one()
                 deleteRestoName = deleteResto.name
