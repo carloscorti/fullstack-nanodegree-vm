@@ -5,7 +5,11 @@ from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Restaurant, MenuItem
 
-engine = create_engine('sqlite:///restaurantmenu.db')
+#By default, check_same_thread is True and only the creating thread may use the connection.
+# If set False, the returned connection may be shared across multiple threads. 
+# When using multiple threads with the same connection writing operations should be serialized by the user to avoid data corruption
+engine = create_engine('sqlite:///restaurantmenu.db', connect_args={'check_same_thread': False})
+
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind = engine)
