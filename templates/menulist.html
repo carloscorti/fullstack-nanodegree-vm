@@ -1,0 +1,20 @@
+{% extends "index.html" %}
+
+{%block body%}
+ 
+<h1>{{resto.name}}</h1>
+<br>
+<ol>
+    {% for i in items %}
+    <li>
+        <h3>{{i.name}}</h3>
+        {{i.price}}
+        <br>
+        {{i.description}}
+        <br>
+        <br>
+    </li>
+    {% endfor %}
+</ol>
+
+{%endblock%} 
