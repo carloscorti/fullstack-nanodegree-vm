@@ -8,11 +8,14 @@
     {% for i in items %}
     <li>
         <h3>{{i.name}}</h3>
-        {{i.price}}
+        <span>{{i.price}}</span>
         <br>
-        {{i.description}}
+        <span>{{i.description}}</span>
         <br>
+        <a href="{{ url_for('editMenuItem', restaurant_id=resto.id, menu_id=loop.index0) }}">Edit</a>
         <br>
+        <a href="{{ url_for('deleteMenuItem', restaurant_id=resto.id, menu_id=loop.index0) }}">Delete</a> 
+                 
     </li>
     {% endfor %}
 </ol>

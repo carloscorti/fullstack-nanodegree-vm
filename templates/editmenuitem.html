@@ -3,8 +3,9 @@
 {%block body%}
  
 <h1>{{resto.name}} | Total Menu Items {{item_list_len}}</h1>
-<h2>Edit Menu Item {{item_list[menu_id].name}} </h2>
-<br>
+<h2>Edit Menu Item N° {{menu_id+1}}: {{item_list[menu_id].name}} </h2>
+<a href="{{ url_for('restoMenuItem', restaurant_id=resto.id) }}">Return to {{resto.name}} Menu List</a>
+<br><br>
 <span>page to edit a menu item. Task 2 complete!</span>
 
 {%endblock%}
