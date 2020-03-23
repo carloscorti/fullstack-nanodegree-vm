@@ -4,6 +4,8 @@
  
 <h1>{{resto.name}}</h1>
 <br>
+
+<a href="{{ url_for('newMenuItem', restaurant_id=resto.id) }}">Create new Menu Item</a>
 <ol>
     {% for i in items %}
     <li>
