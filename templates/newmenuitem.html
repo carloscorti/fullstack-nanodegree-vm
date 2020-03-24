@@ -2,7 +2,7 @@
 
 {%block body%}
  
-<h1>{{resto.name}} | Create Menu Item</h1>
+<h1>{{resto.name}} Create Menu Item</h1>
 <br>
 <form action="{{ url_for('newMenuItem', restaurant_id=resto.id) }}" method= "POST">
     <label for="itemName">Item name</label><br>
@@ -12,7 +12,6 @@
 <br>
 <a href="{{ url_for('restoMenuItem', restaurant_id=restaurant_id) }}">Return to {{resto.name}} Menu List</a>
 <br><br>
-<span>page to create a new menu item. Task 1 complete!</span>
 
 {%endblock%} 
 

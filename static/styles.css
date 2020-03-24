@@ -1,0 +1,170 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: sans-serif;
+    background-color: #333333
+}
+
+h1,
+h2,
+h3,
+h4 {
+    color: #ffffff;
+    margin-top: 1em;
+
+}
+
+h1 {
+    text-align: center;
+
+}
+
+h3 {
+    margin: 1em 0em 0.25em 0em;
+
+}
+
+
+h1,
+h2 {
+    font-family: 'georgia', serif;
+    margin: 0;
+}
+
+h1 {
+    border-bottom: 2px solid #eee;
+}
+
+h2 {
+    font-size: 1.2em;
+}
+
+p,
+label {
+    color: #cccccc;
+    margin-bottom: 0;
+    margin-top: 0;
+
+}
+
+a {
+    text-decoration: none;
+    color: #ffffcc;
+    font-size: .75em;
+    font-weight: bold;
+}
+
+div.pane > a {
+    padding-left: 23px;
+    font-family:'georgia', serif;
+}
+
+
+div.pane > a::before {
+    content: '';
+    width: 1.25em;
+    height: 1.25em;
+    background-image: url(./png/lampara.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 1.5em;
+    vertical-align: text-top;
+}
+
+li > a::before {
+    content: '';
+    width: 1.25em;
+    height: 1.25em;
+    background-image: url(./png/pluma.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 1.5em;
+    vertical-align: text-top;
+    margin-left: 1px;
+}
+
+li > a:last-child::before {
+    content: '';
+    width: 1.25em;
+    height: 1.25em;
+    background-image: url(./png/borrar.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 1.5em;
+    vertical-align: text-top;
+    margin-right: 1px;
+}
+
+a:hover,
+div.pane > a::before {
+    text-decoration: underline;
+    color: #cee5f5;
+}
+
+
+
+button {
+    font-family: 'georgia', serif;
+    border: 0;
+    padding: 3px 6px;
+    background-color: #ffffff;
+
+}
+
+li,
+form {
+    font-family: 'georgia', serif;
+    color: #ffffff;
+}
+
+.pane {
+    position: absolute;
+    left: 25%;
+    right: 25%;
+    border: 2px solid;
+    border-radius: 25px;
+    padding: 5px;
+    margin: 5px;
+    border-color: #999999;
+    background-color: #333333;
+}
+
+.header {
+    left: 50%;
+    text-align: center;
+}
+
+.name {
+    width: 50%;
+    display: inline-block;
+    float: left;
+}
+
+.description {}
+
+.price {
+    text-align: right;
+    width: 50%;
+    float: right;
+}
+
+.editdeletepane {}
+
+.flash {
+    background: #cee5f5;
+}
+
