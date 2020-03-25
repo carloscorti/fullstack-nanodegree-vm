@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, request, redirect, flash      
+from flask import Flask, render_template, url_for, request, redirect, flash, jsonify
 app = Flask(__name__)
 
 from sqlalchemy import create_engine, func
@@ -17,6 +17,26 @@ Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind = engine)
 session = DBSession()
+
+#API endpoint
+@app.route('/restaurant/<int:restaurant_id>/menu/JSON')
+def restaurantMenuJSON(restaurant_id):
+    if request.method == 'GET':
+        items = session.query(MenuItem).filter_by(restaurant_id = restaurant_id)
+        return jsonify(MenuItems=[i.serialize for i in items])
+    else:
+        return "<h1>Only GET requests</h1>"
+
+@app.route('/restaurant/<int:restaurant_id>/<int:menu_id>/JSON')
+def simpleRestaurantMenuJSON(restaurant_id, menu_id):
+    if request.method == 'GET':
+        items_id = session.query(MenuItem.id).filter_by(restaurant_id = restaurant_id).values(MenuItem.id)
+        item_id_list = list(items_id)
+        itemToSend = session.query(MenuItem).filter_by(id=item_id_list[menu_id].id).one()
+        return jsonify(SimpleMenuItem = itemToSend.serialize )
+    else:
+        return "<h1>Only GET requests</h1>"
+
 
 @app.route('/restaurant/<int:restaurant_id>/')
 def restoMenuItem(restaurant_id=3):

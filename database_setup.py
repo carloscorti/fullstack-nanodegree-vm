@@ -63,7 +63,18 @@ class MenuItem(Base):
     
     restaurant = relationship(Restaurant) #referencia la relacion entre tablas, depende si es uno a uno, uno a muchos, muchos a uno o muchos a muchos y si es en un sentido o ambos (bidireccional es back_populates)
 
-    
+    @property
+    def serialize(self):
+        #returns object data in easily serializable format
+        return {
+            'name': self.name,
+            'description': self.description,
+            'id': self.id,
+            'price': self.price,
+            'course': self.course,
+        }    
+
+
 ###### esto siempre al final 
 engine = create_engine('sqlite:///restaurantmenu.db') #el motor apunta a la base de datos que vamos a usar, usa SQlite3 en este caso, generara el archivo restaurantmenu.db
 Base.metadata.create_all (engine) #va a la base de dato y agrega las clases que creamos como nuevas tablas en la base de datos
