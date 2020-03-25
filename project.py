@@ -53,7 +53,7 @@ def editMenuItem(restaurant_id, menu_id):
 
     if request.method == 'POST':
         if request.form['editItem']:
-            itemToEdit = session.query(MenuItem).filter_by(restaurant_id = restaurant_id, name=item_list[menu_id].name, id=item_id_list[menu_id].id).one()
+            itemToEdit = session.query(MenuItem).filter_by(id=item_id_list[menu_id].id).one()
             itemToEdit.name = request.form['editItem']
             session.add(itemToEdit)
             session.commit()
@@ -75,7 +75,7 @@ def deleteMenuItem(restaurant_id, menu_id):
 
     if request.method == 'POST':
         deleteItem = item_list[menu_id].name
-        itemToDelete = session.query(MenuItem).filter_by(name = deleteItem, id=item_id_list[menu_id].id).one()
+        itemToDelete = session.query(MenuItem).filter_by(id=item_id_list[menu_id].id).one()
         session.delete(itemToDelete)
         session.commit()
         flash('The Item %s was Deleted!!' % deleteItem)
