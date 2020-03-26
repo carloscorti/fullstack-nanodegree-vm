@@ -1,10 +1,92 @@
+from flask import Flask, render_template, url_for, request, redirect, flash, jsonify
+app = Flask(__name__)
+
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Restaurant
 
+
+engine = create_engine('sqlite:///restaurantmenu.db', connect_args={'check_same_thread': False})
+
+Base.metadata.bind = engine
+
+DBSession = sessionmaker(bind = engine)
+session = DBSession()
+
+@app.route('/')
+@app.route('/restaurant/')
+def restaurantList():
+    url = url_for('createRestaurant')
+    resto = session.query(Restaurant).all()
+    restoList=[r.name for r in resto]
+    output = '<a href=#>A restauran id 3 menu</a> <br>'
+    output += '<br>'.join(restoList)
+    return output
+
+
+@app.route('/restaurant/new/', methods=["POST", "GET"])
+def createRestaurant():
+    if request.method == 'POST':
+        name = request.form['name']
+        return "<h1>Create restaurant POST request %s</h1>" % name
+    else:
+        url = url_for('createRestaurant')
+        output="<h1>Create new Restaurants!!</h1>"
+        output+= """
+            <div>
+                <form action='%s' method="POST">
+                    <label for="name">Restaurant Name</label>
+                    <input type="text" id="name" name="name">
+                    <button type='submit'>Upload</button>
+                </form>
+            </div> """ % url
+        return output
+
+@app.route('/restaurant/<int:resto_id>/edit/', methods=["POST", "GET"])
+#verificar que resto_id este dentro de la lsta de restos
+def editRestaurant(resto_id):
+    if request.method == 'POST':
+        reName = request.form['reName']
+        return "<h1>Edit restaurant n %s to %s with POST requestS</h1>" % (resto_id, reName)
+    else:
+        url = url_for('editRestaurant', resto_id=resto_id)
+        output="<h1>Edit Restaurant id %s!!</h1>" % resto_id
+        output+= """
+            <div>
+                <form action='%s' method="POST">
+                    <label for="rename-restaurant">New Name</label>
+                    <input type="text" id="rename-restaurant" name="reName">
+                    <button type='submit'>Edit</button>
+                </form>
+            </div> """ % url
+        return output
+
+@app.route('/restaurant/<int:resto_id>/delete/', methods=["POST", "GET"])
+#verificar que resto_id este dentro de la lsta de restos
+def deleteRestaurant(resto_id):
+    if request.method == 'POST':
+        return "<h1>Deleted restaurant n %s with POST requestS</h1>" % (resto_id)
+    else:
+        url = url_for('deleteRestaurant', resto_id=resto_id)
+        output="<h1>Whant to delete Restaurant id %s??</h1>" % resto_id
+        output+= """
+            <div>
+                <form action='%s' method="POST">
+                    <button type='submit'>Delete</button>
+                </form>
+            </div> """ % url
+        return output
+
+
+
+"""
+
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import cgi
 import re
+
+
 
 #main, instancia el servidor y especifica que puerto va a escuchar
 
@@ -90,15 +172,15 @@ class webserverHanlder (BaseHTTPRequestHandler):
                 output=""
                 output+="<html><body>"
                 output+="<h1>Create new Restaurants!!</h1>"
-                output+= """
-                    <div>
-                    <form method='POST' enctype='multipart/form-data' action='/restaurants/new'>
-                        <label for="name">Restaurant Name</label>
-                        <input type="text" id="name" name="name">
-                        <button type='submit'>Upload</button>
-                    </form>
-                    </div> 
-                    """
+                output+= "
+                    #<div>
+                    #<form method='POST' enctype='multipart/form-data' action='/restaurants/new'>
+                        #<label for="name">Restaurant Name</label>
+                        #<input type="text" id="name" name="name">
+                        #<button type='submit'>Upload</button>
+                    #</form>
+                    #</div> 
+                    "
                 output+="<a href='/restaurant'>Return to Restaurants List</a>"                        
                 output+="</body></html>"
                 self.wfile.write(output)
@@ -120,11 +202,11 @@ class webserverHanlder (BaseHTTPRequestHandler):
                 output+="<h1>Edit Restaurant</h1>"
                 output+="<h2>%s</h2>" % toModify.name
                 output+="<div><form method='POST' enctype='multipart/form-data' action='/restaurant/%s/edit'>" % toModify.id
-                output+="""
-                        <label for="rename-restaurant">New Name</label>
-                        <input type="text" id="rename-restaurant" name="reName">
-                        <button type='submit'>Upload</button>
-                        """
+                output+="
+                        #<label for="rename-restaurant">New Name</label>
+                        #<input type="text" id="rename-restaurant" name="reName">
+                        #<button type='submit'>Upload</button>
+                        "
                 output+="</form></div>"
                 output+="<a href='/restaurant'>Return to Restaurants List</a>"                        
                 output+="</body></html>"
@@ -148,9 +230,9 @@ class webserverHanlder (BaseHTTPRequestHandler):
                 output+="<h1>Delete Restaurant</h1>"
                 output+="<h2>Are you sure you want to delete %s??</h2>" % toDelete.name
                 output+="<div><form method='POST' enctype='multipart/form-data' action='/%s/delete'>" % toDelete.id
-                output+="""
-                        <button type='submit'>Delete</button>
-                        """
+                #output+="
+                        #<button type='submit'>Delete</button>
+                        "
                 output+="</form></div>"
                 output+="<a href='/restaurant'>Return to Restaurants List</a>"                        
                 output+="</body></html>"
@@ -270,3 +352,10 @@ def main():
 #al final para ejecutar inmediatamente main cuando el python interpreter ejecute el script
 if __name__ == '__main__':
     main()
+"""
+
+
+if __name__ == '__main__': 
+    app.secret_key = 'secret_key' #flask lo usa para crear sesiones para los usuarios tiene que ser un passwoerd seguro
+    app.debug = True
+    app.run(host = '0.0.0.0', port= 5000) 
