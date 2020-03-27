@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Restaurant
+from database_setup import Base, Restaurant, MenuItem
 
 
 engine = create_engine('sqlite:///restaurantmenu.db', connect_args={'check_same_thread': False})
@@ -14,345 +14,133 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind = engine)
 session = DBSession()
 
+#show restaurant list
 @app.route('/')
 @app.route('/restaurant/')
 def restaurantList():
-    url = url_for('createRestaurant')
     resto = session.query(Restaurant).all()
-    restoList=[r.name for r in resto]
-    output = '<a href=#>A restauran id 3 menu</a> <br>'
-    output += '<br>'.join(restoList)
-    return output
+    return render_template('restolist.html', resto=resto)
 
-
+#create new restaurant
 @app.route('/restaurant/new/', methods=["POST", "GET"])
 def createRestaurant():
+    resto = session.query(Restaurant).all()
     if request.method == 'POST':
-        name = request.form['name']
-        return "<h1>Create restaurant POST request %s</h1>" % name
+        if request.form['newResto']:
+            newResto = Restaurant(name=request.form['newResto'])
+            session.add(newResto)
+            session.commit()
+            flash('New restaurant called %s was created!!' % newResto.name)
+            return redirect(url_for('restaurantList'))
+        else:
+            flash("Please enter the new restaurant's name")
+            return render_template('createresto.html', resto=resto)
     else:
-        url = url_for('createRestaurant')
-        output="<h1>Create new Restaurants!!</h1>"
-        output+= """
-            <div>
-                <form action='%s' method="POST">
-                    <label for="name">Restaurant Name</label>
-                    <input type="text" id="name" name="name">
-                    <button type='submit'>Upload</button>
-                </form>
-            </div> """ % url
-        return output
+        return render_template('createresto.html', resto=resto)
 
-@app.route('/restaurant/<int:resto_id>/edit/', methods=["POST", "GET"])
-#verificar que resto_id este dentro de la lsta de restos
-def editRestaurant(resto_id):
+#edit restaurant
+@app.route('/restaurant/<int:restaurant_id>/edit/', methods=["POST", "GET"])
+#verificar que restaurant_id este dentro de la lista de restos
+def editRestaurant(restaurant_id):
+    resto = session.query(Restaurant).filter_by(id=restaurant_id).one()
     if request.method == 'POST':
-        reName = request.form['reName']
-        return "<h1>Edit restaurant n %s to %s with POST requestS</h1>" % (resto_id, reName)
-    else:
-        url = url_for('editRestaurant', resto_id=resto_id)
-        output="<h1>Edit Restaurant id %s!!</h1>" % resto_id
-        output+= """
-            <div>
-                <form action='%s' method="POST">
-                    <label for="rename-restaurant">New Name</label>
-                    <input type="text" id="rename-restaurant" name="reName">
-                    <button type='submit'>Edit</button>
-                </form>
-            </div> """ % url
-        return output
+        if request.form['newName']:
+            oldName = resto.name
+            resto.name = request.form['newName']
+            session.add(resto)
+            session.commit()
+            flash('The restaurant %s was edited to %s!!' % (oldName, resto.name))
+            return redirect(url_for('restaurantList'))
+        else:
+            flash("Please enter the new name for %s restaurant" % resto.name)
+            return render_template('editresto.html', resto=resto, restaurant_id=restaurant_id)
 
-@app.route('/restaurant/<int:resto_id>/delete/', methods=["POST", "GET"])
-#verificar que resto_id este dentro de la lsta de restos
-def deleteRestaurant(resto_id):
+    else:
+        return render_template('editresto.html', resto=resto, restaurant_id=restaurant_id)
+
+#delete restauratn
+@app.route('/restaurant/<int:restaurant_id>/delete/', methods=["POST", "GET"])
+#verificar que restaurant_id este dentro de la lsta de restos
+def deleteRestaurant(restaurant_id):
+    resto = session.query(Restaurant).filter_by(id=restaurant_id).one()
     if request.method == 'POST':
-        return "<h1>Deleted restaurant n %s with POST requestS</h1>" % (resto_id)
+        deleteItem = resto.name
+        itemToDelete = session.query(Restaurant).filter_by(id=restaurant_id).one()
+        session.delete(itemToDelete)
+        session.commit()
+        flash('The restaurant %s was deleted!!' % deleteItem)
+        return redirect(url_for('restaurantList'))
     else:
-        url = url_for('deleteRestaurant', resto_id=resto_id)
-        output="<h1>Whant to delete Restaurant id %s??</h1>" % resto_id
-        output+= """
-            <div>
-                <form action='%s' method="POST">
-                    <button type='submit'>Delete</button>
-                </form>
-            </div> """ % url
-        return output
+        return render_template('deleteresto.html', resto=resto, restaurant_id=restaurant_id)
 
+#show menu for selected restaurant
+@app.route('/restaurant/<int:restaurant_id>/')
+@app.route('/restaurant/<int:restaurant_id>/menu/')
+def restoMenuList(restaurant_id):
+    resto = session.query(Restaurant).filter_by(id = restaurant_id).one()
+    items = session.query(MenuItem).filter_by(restaurant_id = resto.id)
 
+    return render_template('menulist.html', resto=resto, items=items)
 
-"""
+#add new menu item for selected restaurant
+@app.route('/restaurant/<int:restaurant_id>/menu/new/', methods=["POST", "GET"])
+def newMenuItem(restaurant_id):
+    resto = session.query(Restaurant).filter_by(id = restaurant_id).one()
 
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-import cgi
-import re
+    if request.method == 'POST':
+        newItem = request.form['newItem']
+        return "<h1>Created menu item %s for %s with POST requests</h1>" % (newItem, resto.name)
+        #newItem = MenuItem(name=request.form['newItem'], restaurant_id=restaurant_id)
+        #session.add(newItem)
+        #session.commit()
+        #flash('New Menu Item %s was created!!' % newItem.name)
+        #return redirect(url_for('restoMenuItem', restaurant_id=restaurant_id))
+    else:
+        return render_template('newmenuitem.html', resto=resto, restaurant_id=restaurant_id)
 
+#edit menu item 
+@app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/edit/', methods=["POST", "GET"])
+def editMenuItem(restaurant_id, menu_id):
+    resto = session.query(Restaurant).filter_by(id = restaurant_id).one()
+    items = session.query(MenuItem).filter_by(restaurant_id = restaurant_id)#.values(MenuItem.name)
+    #items_id = session.query(MenuItem.id).filter_by(restaurant_id = restaurant_id).values(MenuItem.id)
+    item_list = list(items)
+    #item_id_list = list(items_id)
+    item_list_len = len(item_list)
 
+    if request.method == 'POST':
+        editItemName = request.form['editItemName']
+        return "<h1>Edited menu item %s to %s from %s with POST requests</h1>" % (item_list[menu_id].name, editItemName, resto.name)
+        #if request.form['editItem']:
+            #itemToEdit = session.query(MenuItem).filter_by(restaurant_id = restaurant_id, name=item_list[menu_id].name, id=item_id_list[menu_id].id).one()
+            #itemToEdit.name = request.form['editItem']
+            #session.add(itemToEdit)
+            #session.commit()
+            #flash('The Item %s was Edited to %s!!' % (item_list[menu_id].name, itemToEdit.name))
+        #return redirect(url_for('restoMenuItem', restaurant_id=restaurant_id))
+    else:
+        return render_template('editmenuitem.html', resto=resto, item_list=item_list, menu_id=menu_id, item_list_len=item_list_len)
 
-#main, instancia el servidor y especifica que puerto va a escuchar
+# delete menu item
+@app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/delete/', methods=["POST", "GET"])
+def deleteMenuItem(restaurant_id, menu_id):
+    resto = session.query(Restaurant).filter_by(id = restaurant_id).one()
+    items = session.query(MenuItem).filter_by(restaurant_id = restaurant_id)#.values(MenuItem.name)
+    #items_id = session.query(MenuItem.id).filter_by(restaurant_id = restaurant_id).values(MenuItem.id)
+    item_list = list(items)
+    #item_id_list = list(items_id)
+    item_list_len = len(item_list)
 
-#handler, que codigo va a ejecutar dependiendo del HTTP reuqest enviado al servidor
-
-class webserverHanlder (BaseHTTPRequestHandler):      
-    
-    engine = create_engine('sqlite:///restaurantmenu.db')
-    Base.metadata.bind = engine
-    DBSession = sessionmaker(bind = engine)
-    ses = DBSession()
-
-    #services
-    #return path chunk selected as a string, if complete True return a list of splited path
-    def pathChunk (self, num, complete=False, splitChar="/"):
-        splitPath = self.path.split(splitChar)
-        if complete:
-            return splitPath
-        else:
-            return splitPath[num]
-
-    #checks path len
-    def checkPathLen (self, num,  splitChar="/"):
-        if len(self.path.split(splitChar))==num:
-            return True
-        else:
-            return False
-
-    #check id in path to be in tableClass
-    def checkIdChunk (self, chunkPosition, tableClass=Restaurant):
-        idToCheck = self.pathChunk(chunkPosition)
-        pattern= re.compile('^\d*$')
-        if pattern.match(idToCheck):
-            restoIdList = self.ses.query(tableClass.id).all()
-            maxId = max(restoIdList)
-            if int(idToCheck) <= maxId[0] and int(idToCheck) > 0 and ((int(idToCheck),) in restoIdList):
-                return True
-            else:
-                return False
-        else:
-            return False
-    
-    
-    def do_GET(self):
-
-        try:
-
-            #restaurant list
-            if self.path.endswith("/restaurant") and self.checkPathLen(2):
-                self.send_response(200)
-                self.send_header('Content-Type', 'text/html')
-                self.end_headers()
-
-                
-                restoList = self.ses.query(Restaurant).all()
-
-                output=""
-                output+="<html><body>"
-                output+="<h1>Restaurant list</h1>"
-                output+="<a href='/restaurants/new'>Create a new Restaurant</a>"
-                output+="<div><ul>"
-
-                for resto in restoList:
-                    output+="<li>%s</li>" % resto.name
-                    output+="<a href='restaurant/%s/edit'>Edit Restaurant</a>" % resto.id
-                    output+="<br>"
-                    output+="<a href='%s/delete'>Delete Restaurant</a>" % resto.id
-                    output+="<br><br>"
-
-                output+="</ul></div>"
-                output+="</body></html>"
-                self.wfile.write(output)
-                print output
-
-                return 
-
-            #new reaturant entry
-            if self.path.endswith("/restaurants/new") and self.checkPathLen(3):
-                self.send_response(200)
-                self.send_header('Content-Type', 'text/html')
-                self.end_headers()
-
-                output=""
-                output+="<html><body>"
-                output+="<h1>Create new Restaurants!!</h1>"
-                output+= "
-                    #<div>
-                    #<form method='POST' enctype='multipart/form-data' action='/restaurants/new'>
-                        #<label for="name">Restaurant Name</label>
-                        #<input type="text" id="name" name="name">
-                        #<button type='submit'>Upload</button>
-                    #</form>
-                    #</div> 
-                    "
-                output+="<a href='/restaurant'>Return to Restaurants List</a>"                        
-                output+="</body></html>"
-                self.wfile.write(output)
-                print output
-                return
-
-
-            #modify restaurant
-            if self.checkPathLen(4) and self.checkIdChunk(2) and self.pathChunk(1)== ("restaurant") and self.path.endswith("/edit"):
-
-                self.send_response(200)
-                self.send_header('Content-Type', 'text/html')
-                self.end_headers()
-
-                toModify = self.ses.query(Restaurant).filter_by(id= (int(self.pathChunk(2))) ).one()
- 
-                output=""
-                output+="<html><body>"
-                output+="<h1>Edit Restaurant</h1>"
-                output+="<h2>%s</h2>" % toModify.name
-                output+="<div><form method='POST' enctype='multipart/form-data' action='/restaurant/%s/edit'>" % toModify.id
-                output+="
-                        #<label for="rename-restaurant">New Name</label>
-                        #<input type="text" id="rename-restaurant" name="reName">
-                        #<button type='submit'>Upload</button>
-                        "
-                output+="</form></div>"
-                output+="<a href='/restaurant'>Return to Restaurants List</a>"                        
-                output+="</body></html>"
-                self.wfile.write(output)
-                print output
-
-                return
-
-
-            #delete restaurant
-            if self.checkPathLen(3) and self.path.endswith("/delete") and self.checkIdChunk(1):
-
-                self.send_response(200)
-                self.send_header('Content-Type', 'text/html')
-                self.end_headers()
-
-                toDelete = self.ses.query(Restaurant).filter_by(id= ( int(self.pathChunk(1)) ) ).one()
- 
-                output=""
-                output+="<html><body>"
-                output+="<h1>Delete Restaurant</h1>"
-                output+="<h2>Are you sure you want to delete %s??</h2>" % toDelete.name
-                output+="<div><form method='POST' enctype='multipart/form-data' action='/%s/delete'>" % toDelete.id
-                #output+="
-                        #<button type='submit'>Delete</button>
-                        "
-                output+="</form></div>"
-                output+="<a href='/restaurant'>Return to Restaurants List</a>"                        
-                output+="</body></html>"
-                self.wfile.write(output)
-                print output
-                return 
-            
-            raise IOError        
-
-        except IOError:
-            self.send_error(404, "File not Fount %s" % self.path)
-            print("there was an error :(")
-
-    
-    def do_POST(self):
-        try:
-            self.send_response(301)
-            self.end_headers()
-
-            #CREATE new restaurabd post
-            if self.path.endswith("/restaurants/new"):
-                ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
-                if ctype == 'multipart/form-data':
-                    fields = cgi.parse_multipart(self.rfile, pdict)
-                    restoName = fields.get('name')
-
-                newResto = Restaurant(name = restoName[0])
-                self.ses.add(newResto)
-                self.ses.commit()
-
-                output=""
-                output+="<html><body>"
-                output+="<h1>Geat!!!!</h1>"
-                output+="<h2>%s was uploaded succesfully!!</h2>" % restoName[0]
-                output+="<a href='/restaurants/new'>Create a new Restaurant</a><br>"
-                output+="<a href='/restaurant'>Return to Restaurants List</a>"
-                output+="</body></html>"
-
-                self.wfile.write(output)
-                print output
-                return
-
-            #UPDATE edit restaurant name
-            if self.checkPathLen(4) and self.checkIdChunk(2) and self.pathChunk(1)== ("restaurant") and self.path.endswith("/edit"):
-                ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
-                if ctype == 'multipart/form-data':
-                    fields = cgi.parse_multipart(self.rfile, pdict)
-                    oldRestoId = int(self.pathChunk(2))
-                    newName = fields.get('reName')
-
-                modifyResto = self.ses.query(Restaurant).filter_by(id= oldRestoId ).one()
-                oldRestoName = modifyResto.name
-                modifyResto.name = newName[0]
-                self.ses.add(modifyResto)
-                self.ses.commit()
-
-                checkChange = self.ses.query(Restaurant).filter_by(name=newName[0]).one()
-
-                output=""
-                output+="<html><body>"
-                output+="<h1>Awesome!!!!</h1>"
-                output+="<h2>%s was renamed to %s!!</h2>" % (oldRestoName, checkChange.name)
-                output+="<a href='/restaurants/new'>Create a new Restaurant</a><br>"
-                output+="<a href='/restaurant'>Return to Restaurants List</a><br>"
-                output+="<a href='/restaurant/id/edit'>Edit Restaurant</a>"
-                output+="</body></html>"
-
-                self.wfile.write(output)
-                print output
-                return
-
-            #DELETE delete restaurant from restaurantmenu.db
-            if self.checkPathLen(3) and self.path.endswith("/delete") and self.checkIdChunk(1):
-
-                deleteRestoId = int(self.pathChunk(1))
-
-                deleteResto = self.ses.query(Restaurant).filter_by(id= deleteRestoId ).one()
-                deleteRestoName = deleteResto.name
-                self.ses.delete(deleteResto)
-                self.ses.commit()
-
-                output=""
-                output+="<html><body>"
-                output+="<h1>Done</h1>"
-                output+="<h2>%s was deleted form database!!</h2>" % deleteRestoName
-                output+="<a href='/restaurants/new'>Create a new Restaurant</a><br>"
-                output+="<a href='/restaurant'>Return to Restaurants List</a><br>"
-                output+="<a href='/restaurant/id/edit'>Edit Restaurant</a>"
-                output+="</body></html>"
-
-                self.wfile.write(output)
-                print output
-                return
-
-            raise IOError        
-
-
-        except IOError:
-            self.send_error(404, "File not Fount %s" % self.path)
-            print("there was an error :(")
-
-
-
-def main():
-    
-    try:
-        port = 8080
-        server = HTTPServer(('', port), webserverHanlder)
-        print "Web server running on port %s" % port
-        server.serve_forever()
-
-        
-    except KeyboardInterrupt: #se lanza cuand el usuario mantiene Ctrl+C
-        print "Ctrl+C entered, stopping web server..."
-        server.socket.close()
-    
-#al final para ejecutar inmediatamente main cuando el python interpreter ejecute el script
-if __name__ == '__main__':
-    main()
-"""
+    if request.method == 'POST':
+        return "<h1>Deleted menu item %s from %s with POST requests</h1>" % (item_list[menu_id].name, resto.name)
+        #deleteItem = item_list[menu_id].name
+        #itemToDelete = session.query(MenuItem).filter_by(name = deleteItem, id=item_id_list[menu_id].id).one()
+        #session.delete(itemToDelete)
+        #session.commit()
+        #flash('The Item %s was Deleted!!' % deleteItem)
+        #return redirect(url_for('restoMenuItem', restaurant_id=restaurant_id))
+    else:
+        return render_template('deletemenuitem.html', resto=resto, item_list=item_list, menu_id=menu_id, item_list_len=item_list_len)
 
 
 if __name__ == '__main__': 

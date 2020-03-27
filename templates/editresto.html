@@ -1,0 +1,31 @@
+{% extends "index.html" %}
+
+{% block title %}Edit Restaurant{% endblock %} 
+
+{%block body%}
+ 
+<h1>Edit {{resto.name}}</h1>
+
+<br>
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<ul>
+    {% for message in messages %}
+    <li>{{message}}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endwith %}
+
+<br>
+<form action="{{ url_for('editRestaurant', restaurant_id=restaurant_id) }}" method= "POST">
+    <label for="restoName">New Name</label><br>
+    <input type="text" id="restoName" name="newName" placeholder="{{resto.name}}">
+    <button type="submit">Edit</button>
+</form>
+<br>
+<a href="{{ url_for('restaurantList') }}">Return to Restaurant List</a>
+<br><br>
+
+
+{%endblock%}

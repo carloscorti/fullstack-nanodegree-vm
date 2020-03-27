@@ -1,0 +1,23 @@
+{% extends "index.html" %}
+
+{% block title %}{{resto.name}} New Menu Item{% endblock %} 
+
+{%block body%}
+ 
+<h1>{{resto.name}} Create Menu Item</h1>
+<br>
+<form action="{{ url_for('newMenuItem', restaurant_id=resto.id) }}" method= "POST">
+    <label for="itemName">Item name</label><br>
+    <input type="text" id="itemName" name="newItem">
+    <button type="submit">Create</button>
+</form>
+<br>
+<a href="{{ url_for('restoMenuList', restaurant_id=restaurant_id) }}">Return to {{resto.name}} Menu List</a>
+<br><br>
+
+{%endblock%} 
+
+
+
+
+

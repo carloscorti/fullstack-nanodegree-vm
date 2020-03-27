@@ -1,0 +1,25 @@
+{% extends "index.html" %}
+
+{% block title %}Edit {{item_list[menu_id].name}} from {{resto.name}} Menu{% endblock %} 
+
+{%block body%}
+ 
+<h1>{{resto.name}} Total Menu Items {{item_list_len}}</h1>
+<h2>Edit Menu Item N° {{menu_id+1}}: {{item_list[menu_id].name}} </h2>
+<br>
+<form action="{{ url_for('editMenuItem', restaurant_id=resto.id, menu_id=menu_id) }}" method= "POST">
+    <label for="itemName">Name</label><br>
+    <input type="text" id="itemName" name="editItemName" placeholder="{{item_list[menu_id].name}}"><br>
+    <label for="itemCourse">Course</label><br>
+    <input type="text" id="itemCourse" name="editItemCourse" placeholder="{{item_list[menu_id].course}}"><br>
+    <label for="itemDescription">Description</label><br>
+    <input type="text" id="itemCourse" name="editDescription" placeholder="{{item_list[menu_id].description}}"><br>
+    <label for="itemPrice">Price</label><br>
+    <input type="text" id="itemPrice" name="editPrice" placeholder="{{item_list[menu_id].price}}"><br>
+    <button type="submit">Edit</button>
+</form>
+<br>
+<a href="{{ url_for('restoMenuList', restaurant_id=resto.id) }}">Return to {{resto.name}} Menu List</a>
+<br><br>
+
+{%endblock%}
