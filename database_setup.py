@@ -30,6 +30,13 @@ class Restaurant (Base): #creo la tabla
         primary_key = True # es primary key
         )
 
+    @property
+    def serialize(self):
+        #returns object data in easily serializable format
+        return {
+            'id': self.id,
+            'name': self.name,
+        } 
     
     
 class MenuItem(Base): 
@@ -62,6 +69,19 @@ class MenuItem(Base):
         )
     
     restaurant = relationship(Restaurant) #referencia la relacion entre tablas, depende si es uno a uno, uno a muchos, muchos a uno o muchos a muchos y si es en un sentido o ambos (bidireccional es back_populates)
+
+    @property
+    def serialize(self):
+        #returns object data in easily serializable format
+        return {
+            'id': self.id,
+            'name': self.name,
+            'course': self.course,
+            'description': self.description,
+            'price': self.price,
+            'restaurant': self.restaurant_id,
+        }    
+
 
     
 ###### esto siempre al final 

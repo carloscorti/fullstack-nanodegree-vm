@@ -18,7 +18,91 @@ session = DBSession()
 #error handling
 @app.errorhandler(404)
 def page_not_found(error):
-    return render_template("error.html",error="Ups, page not found :("), 404
+        return render_template("error.html",error="Ups, page not found :("), 404
+
+
+#API endpoint
+##Restaurant list
+@app.route('/all/restaurant/JSON')
+def restaurantListJSON():
+    if request.method == 'GET':
+        restos = session.query(Restaurant).all()
+        return jsonify(RestoList=[resto.serialize for resto in restos])
+    else:
+        return "<h1>Only GET requests</h1>"
+
+##Single restaurant
+@app.route('/restaurant/<int:restaurant_id>/JSON')
+def singleRestaurantJSON(restaurant_id):
+    ids = session.query(Restaurant.id).values(Restaurant.id)
+    idList = list(ids)
+    if (restaurant_id,) in idList:
+        if request.method == 'GET':
+            resto = session.query(Restaurant).filter_by(id=restaurant_id).one()
+            return jsonify(Resto=resto.serialize)
+        else:
+            return "<h1>Only GET requests</h1>"
+    else:
+        return jsonify(Response="no resuslts found, check your uri")
+
+
+##Menu Items list
+@app.route('/all/menuitems/JSON')
+def menuItemsListJSON():
+    if request.method == 'GET':
+        menuItems = session.query(MenuItem).all()
+        return jsonify(MenuItemsList=[item.serialize for item in menuItems])
+    else:
+        return "<h1>Only GET requests</h1>"
+
+##Single Item Menu
+@app.route('/menuitems/<int:menu_id>/JSON')
+def singleMenuItemsJSON(menu_id):
+    ids = session.query(MenuItem.id).values(MenuItem.id)
+    idList = list(ids)
+    if (menu_id,) in idList:
+        if request.method == 'GET':
+            menuItems = session.query(MenuItem).filter_by(id=menu_id).one()
+            return jsonify(MenuItem=menuItems.serialize)
+        else:
+            return "<h1>Only GET requests</h1>"
+    else:
+        return jsonify(Response="no resuslts found, check your uri")
+
+
+##Restaurant menu list
+@app.route('/restaurant/<int:restaurant_id>/menu/JSON')
+def restaurantMenuListJSON(restaurant_id):
+    ids = session.query(Restaurant.id).values(Restaurant.id)
+    idList = list(ids)
+    if (restaurant_id,) in idList:
+        if request.method == 'GET':
+            resto = session.query(Restaurant).filter_by(id=restaurant_id).one()
+            menuItems = session.query(MenuItem).filter_by(restaurant_id = resto.id)
+
+            return jsonify(a_Resto=resto.serialize, b_MenuList=[item.serialize for item in menuItems])
+        else:
+            return "<h1>Only GET requests</h1>"
+    else:
+        return jsonify(Response="no resuslts found, check your uri")
+
+##All Restaurants menu list
+@app.route('/all/restaurant/menu/JSON')
+def allRestaurantMenuListJSON():
+    if request.method == 'GET':
+        restos = session.query(Restaurant).all()
+        menuItems = session.query(MenuItem).all()
+        allRestoMenu =  {} 
+        for resto in restos:
+            key = resto.name.strip().replace("'","").replace(" ","_").lower()
+            toAppend = (resto.serialize, [item.serialize for item in menuItems if item.restaurant_id == resto.id ])
+            allRestoMenu[key]=toAppend
+        return jsonify(allRestoMenu)
+    else:
+        return "<h1>Only GET requests</h1>"
+
+
+##web fuctionality
 
 #show restaurant list
 @app.route('/')
