@@ -20,7 +20,7 @@
 <br>
 <form action="{{ url_for('createRestaurant') }}" method= "POST">
     <label for="restoName">Restaurant name</label><br>
-    <input type="text" id="restoName" name="newResto">
+    <input type="text" id="restoName" name="newResto" required>
     <button type="submit">Create</button>
 </form>
 <br>
