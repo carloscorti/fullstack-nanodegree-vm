@@ -13,10 +13,23 @@
     <label for="itemCourse">Course</label><br>
     <input type="text" id="itemCourse" name="editItemCourse" placeholder="{{item_list[menu_id].course}}"><br>
     <label for="itemDescription">Description</label><br>
-    <input type="text" id="itemCourse" name="editDescription" placeholder="{{item_list[menu_id].description}}"><br>
+    <input type="text" id="itemCourse" name="editItemDescription" placeholder="{{item_list[menu_id].description}}"><br>
     <label for="itemPrice">Price</label><br>
-    <input type="text" id="itemPrice" name="editPrice" placeholder="{{item_list[menu_id].price}}"><br>
+    <input type="text" id="itemPrice" name="editItemPrice" placeholder="{{item_list[menu_id].price}}"><br>
+    <label for="itemRestaurant">Restaurant</label><br>
+    <select name="editItemRestaurant" id="itemRestaurant">
+        {% for r in restos %}
+            {% if r.id == resto.id %}
+                <option value="{{r.id}}" selected>{{r.name}}</option>
+            {% else %}
+                <option value="{{r.id}}">{{r.name}}</option>
+            {% endif %}
+        {% endfor %}
+    </select>
+
+
     <button type="submit">Edit</button>
+
 </form>
 <br>
 <a href="{{ url_for('restoMenuList', restaurant_id=resto.id) }}">Return to {{resto.name}} Menu List</a>
