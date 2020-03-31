@@ -15,7 +15,11 @@
 {% endif %}
 {% endwith %}
 
+<a href="{{ url_for('cleanDataBase') }}">DataBase</a>
+<br>
 <a href="{{ url_for('createRestaurant') }}">Create New Restaurant</a>
+
+
 
 <ul>
 {% for r in resto %}

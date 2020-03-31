@@ -1,0 +1,49 @@
+{% extends "index.html" %}
+
+{% block title %}DataBase{% endblock %} 
+
+
+{%block body%}
+ 
+<h1>DataBase</h1>
+
+<a href="{{ url_for('restaurantList') }}">Go to Restaurant List</a>
+
+<h2>Items Database</h2>
+<table>
+    <tr>
+        <th>Select Item</th>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Course</th>
+        <th>Description</th>
+        <th>Price</th>
+        <th>Restaurant_Id</th>
+        <th>Edit</th>
+    </tr>
+    
+    <form action="{{ url_for('cleanDataBase') }}" method="POST">
+        <button type="submit">Delete Selected Items</button>
+        <br>
+        <button type="reset">Clear All</button>
+    {% for item in menuItems%}
+    <tr>
+        <td>
+            <input type="checkbox" name="itemToDelete" value="{{item.id}}">
+        </td>
+        <td>{{item.id}}</td>
+        <td>{{item.name}}</td>
+        <td>{{item.course}}</td>
+        <td>{{item.description}}</td>
+        <td>{{item.price}}</td>
+        <td>{{item.restaurant_id}}</td>
+        <td>
+            <button name="itemToEdit" value="{{item.id}}" formaction="{{ url_for('editMenuItemDataBase') }}" formmethod="GET">Edit</button>
+        </td>
+    </tr>
+    {% endfor %}
+    </form>
+
+</table>
+
+{% endblock %}

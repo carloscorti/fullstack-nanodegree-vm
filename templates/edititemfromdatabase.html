@@ -1,0 +1,40 @@
+{% extends "index.html" %}
+
+{% block title %}Edit {{item.name}} id:{{item.id}} from DataBase List{% endblock %} 
+
+{%block body%}
+ 
+<h1>Edit {{item.name}} id:{{item.id}} from DataBase List</h1>
+<br>
+<form action="{{ url_for('editMenuItemDataBase') }}" method= "POST">
+    <input type="hidden" id="itemId" name="editItemId" value="{{item.id}}"><br>
+    <label for="itemName">Name</label><br>
+    <input type="text" id="itemName" name="editItemName" placeholder="{{item.name}}"><br>
+    <label for="itemCourse">Course</label><br>
+    <input type="text" id="itemCourse" name="editItemCourse" placeholder="{{item.course}}"><br>
+    <label for="itemDescription">Description</label><br>
+    <input type="text" id="itemCourse" name="editItemDescription" placeholder="{{item.description}}"><br>
+    <label for="itemPrice">Price</label><br>
+    <input type="text" id="itemPrice" name="editItemPrice" placeholder="{{item.price}}"><br>
+    <label for="itemRestaurant">Restaurant</label><br>
+    <select name="editItemRestaurant" id="itemRestaurant">
+        {% if (item.restaurant_id,) not in restoIdList %}
+            <option value="{{item.restaurant_id}}" selected>None</option>
+        {% endif %}
+        {% for r in restos %}
+            {% if r.id == item.restaurant_id %}
+                <option value="{{r.id}}" selected>{{r.name}}</option>
+            {% else %}
+                <option value="{{r.id}}">{{r.name}}</option>
+            {% endif %}
+        {% endfor %}
+    </select>
+    <br>
+    <button type="submit">Edit</button>
+
+</form>
+<br>
+<a href="{{ url_for('cleanDataBase') }}">Return to DataBase List</a>
+<br><br>
+
+{%endblock%}

@@ -45,7 +45,6 @@ def singleRestaurantJSON(restaurant_id):
     else:
         return jsonify(Response="no resuslts found, check your uri")
 
-
 ##Menu Items list
 @app.route('/all/menuitems/JSON')
 def menuItemsListJSON():
@@ -68,7 +67,6 @@ def singleMenuItemsJSON(menu_id):
             return "<h1>Only GET requests</h1>"
     else:
         return jsonify(Response="no resuslts found, check your uri")
-
 
 ##Restaurant menu list
 @app.route('/restaurant/<int:restaurant_id>/menu/JSON')
@@ -130,7 +128,6 @@ def createRestaurant():
 
 #edit restaurant
 @app.route('/restaurant/<int:restaurant_id>/edit/', methods=["POST", "GET"])
-#verificar que restaurant_id este dentro de la lista de restos
 def editRestaurant(restaurant_id):
     ids = session.query(Restaurant.id).values(Restaurant.id)
     idList = list(ids)
@@ -155,18 +152,21 @@ def editRestaurant(restaurant_id):
 
 #delete restaurant
 @app.route('/restaurant/<int:restaurant_id>/delete/', methods=["POST", "GET"])
-#verificar que restaurant_id este dentro de la lsta de restos
 def deleteRestaurant(restaurant_id):
     ids = session.query(Restaurant.id).values(Restaurant.id)
     idList = list(ids)
     if (restaurant_id,) in idList:
         resto = session.query(Restaurant).filter_by(id=restaurant_id).one()
         if request.method == 'POST':
-            deleteItem = resto.name
-            itemToDelete = session.query(Restaurant).filter_by(id=restaurant_id).one()
-            session.delete(itemToDelete)
+            deletedResto = resto.name
+            restoToDelete = session.query(Restaurant).filter_by(id=restaurant_id).one()
+            session.delete(restoToDelete)
             session.commit()
-            flash('The restaurant %s was deleted!!' % deleteItem)
+            menuItemsToDelete = session.query(MenuItem).filter_by(restaurant_id=restaurant_id).all()
+            for menuItem in menuItemsToDelete:
+                session.delete(menuItem)
+                session.commit()
+            flash('The restaurant %s was deleted!!' % deletedResto)
             return redirect(url_for('restaurantList'))
         else:
             return render_template('deleteresto.html', resto=resto, restaurant_id=restaurant_id)
@@ -246,13 +246,13 @@ def editMenuItem(restaurant_id, menu_id):
                 flash('The Item %s was Edited!!' % beforeEditItem)
                 return redirect(url_for('restoMenuList', restaurant_id=restaurant_id))
             else:
-                return render_template('editmenuitem.html', resto=resto, item_list=item_list, menu_id=menu_id, item_list_len=item_list_len, restos=restos)
+                return render_template('editmenuitem.html', database=False, resto=resto, item_list=item_list, menu_id=menu_id, item_list_len=item_list_len, restos=restos)
         else:
             abort(404)
     else:
         abort(404)
 
-# delete menu item
+#delete menu item
 @app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/delete/', methods=["POST", "GET"])
 def deleteMenuItem(restaurant_id, menu_id):
     ids = session.query(Restaurant.id).values(Restaurant.id)
@@ -278,6 +278,54 @@ def deleteMenuItem(restaurant_id, menu_id):
     else:
         abort(404)
 
+#clean data base
+@app.route('/database/', methods=["POST", "GET"])
+def cleanDataBase():
+    menuItems = session.query(MenuItem).all()
+    if request.method == 'POST':
+        idsToDelete = request.form.getlist("itemToDelete")
+        for idToDelete in idsToDelete:
+            itemToDelete = session.query(MenuItem).filter_by(id = idToDelete).one()
+            session.delete(itemToDelete)
+            session.commit()
+        return render_template('database.html', menuItems=session.query(MenuItem).all())
+    else:
+        return render_template('database.html', menuItems=menuItems)
+
+#edit item from database site
+@app.route('/database/editmenuitem/', methods=["POST", "GET"])
+def editMenuItemDataBase():
+    if request.method == 'POST':
+        formData = request.form
+        itemToEdit = session.query(MenuItem).filter_by(id=formData["editItemId"]).one()  
+
+        if formData["editItemName"]:
+            itemToEdit.name = formData["editItemName"]
+        if formData["editItemCourse"]: 
+            itemToEdit.course = formData["editItemCourse"]
+        if formData["editItemDescription"]:
+            itemToEdit.description = formData["editItemDescription"]
+        if formData["editItemPrice"]:
+            itemToEdit.price = formData["editItemPrice"]
+        if formData["editItemRestaurant"] != itemToEdit.restaurant_id:
+            itemToEdit.restaurant_id = formData["editItemRestaurant"]
+
+        session.add(itemToEdit)
+        session.commit()
+
+        #flash('The Item %s was Edited!!' % beforeEditItem)
+        return redirect(url_for('cleanDataBase'))
+
+    else:
+        idToEdit = request.args.get("itemToEdit")
+        if idToEdit:
+            item = session.query(MenuItem).filter_by(id = idToEdit).one()
+            restos = session.query(Restaurant).all()
+            restoIds = session.query(Restaurant.id).values(Restaurant.id)
+            restoIdList = list(restoIds)
+            return render_template('edititemfromdatabase.html', item=item, restos=restos, restoIdList=restoIdList)
+        else:
+            abort(404)
 
 if __name__ == '__main__': 
     app.secret_key = 'secret_key' #flask lo usa para crear sesiones para los usuarios tiene que ser un passwoerd seguro
