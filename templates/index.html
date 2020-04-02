@@ -6,8 +6,8 @@
     <title>{% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="{{url_for('static', filename='styles.css')}}">
 </head>
-<body>
-    <div class="pane">
+<body class="mobile">
+    <div class="pane pane-m">
     {%block body%}
     {%endblock%} 
     </div>   

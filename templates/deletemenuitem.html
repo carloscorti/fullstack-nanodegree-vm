@@ -6,12 +6,9 @@
  
 <h1>{{resto.name}} Total Menu Items {{item_list_len}}</h1>
 <h2>Delete Menu Item N° {{menu_id+1}}: {{item_list[menu_id].name}} </h2>
-<br>
 <form action="{{ url_for('deleteMenuItem', restaurant_id=resto.id, menu_id=menu_id) }}" method= "POST">
     <button type="submit">Delete</button>
 </form>
-<br>
 <a href="{{ url_for('restoMenuList', restaurant_id=resto.id) }}">Return to {{resto.name}} Menu List</a>
-<br><br>
 
 {%endblock%}

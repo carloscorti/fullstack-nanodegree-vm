@@ -5,21 +5,18 @@
 {%block body%}
  
 <h1>{{resto.name}} Create Menu Item</h1>
-<br>
 <form action="{{ url_for('newMenuItem', restaurant_id=resto.id) }}" method= "POST">
-    <label for="itemName">Name</label><br>
-    <input type="text" id="itemName" name="newItemName" placeholder="Name" required><br>
-    <label for="itemCourse">Course</label><br>
-    <input type="text" id="itemCourse" name="newItemCourse" placeholder="Course"><br>
-    <label for="itemDescription">Description</label><br>
-    <input type="text" id="itemCourse" name="newItemDescription" placeholder="Description"><br>
-    <label for="itemPrice">Price</label><br>
-    <input type="text" id="itemPrice" name="newItemPrice" placeholder="Price"><br>
+    <label for="itemName">Name</label>
+    <input type="text" id="itemName" name="newItemName" placeholder="Name" required>
+    <label for="itemCourse">Course</label>
+    <input type="text" id="itemCourse" name="newItemCourse" placeholder="Course">
+    <label for="itemDescription">Description</label>
+    <textarea id="itemDescription" name="newItemDescription" placeholder="Description"></textarea>
+    <label for="itemPrice">Price</label>
+    <input type="text" id="itemPrice" name="newItemPrice" placeholder="Price">
     <button type="submit">Create</button>
 </form>
-<br>
 <a href="{{ url_for('restoMenuList', restaurant_id=restaurant_id) }}">Return to {{resto.name}} Menu List</a>
-<br><br>
 
 {%endblock%} 
 

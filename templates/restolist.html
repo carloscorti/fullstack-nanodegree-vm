@@ -7,29 +7,30 @@
 <h1>Restaurant List</h1>
 {% with messages = get_flashed_messages() %}
 {% if messages %}
-<ul>
-    {% for message in messages %}
-    <li>{{message}}</li>
-    {% endfor %}
-</ul>
+<div class="modal">
+    <div  class="modal-contenido modal-contenido-m">
+        {% for message in messages %}
+        <h1>{{message}}</h1>
+        {% endfor %}
+        <a href="{{ url_for('restaurantList') }}">Return to Restaurant List</a>
+    </div>
+</div>
 {% endif %}
 {% endwith %}
-
-<a href="{{ url_for('cleanDataBase') }}">DataBase</a>
-<br>
 <a href="{{ url_for('createRestaurant') }}">Create New Restaurant</a>
+<a href="{{ url_for('cleanDataBase') }}">Go to DataBase</a>
 
 
 
-<ul>
+<ol>
 {% for r in resto %}
 <li>
-    <h2><a href="{{ url_for('restoMenuList', restaurant_id=r.id) }}">{{r.name}}</a></h2>
+    <h3>{{r.name}}</h3>
+    <a href="{{ url_for('restoMenuList', restaurant_id=r.id) }}">Menu</a>
     <a href="{{ url_for('editRestaurant', restaurant_id=r.id) }}">Edit</a>
-    <br>
     <a href="{{ url_for('deleteRestaurant', restaurant_id=r.id) }}">Delete</a>
 </li>
 {% endfor %}
-</ul>
+</ol>
 
 {%endblock%}

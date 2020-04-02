@@ -5,14 +5,18 @@
 
 {%block body%}
  
-<h1>DataBase</h1>
+<h1 id="up" class="database">DataBase</h1>
 
-<a href="{{ url_for('restaurantList') }}">Go to Restaurant List</a>
+<a href="{{ url_for('restaurantList') }}" class="database">Go to Restaurant List</a>
 
-<h2>Items Database</h2>
+<h2 class="database">Items Database</h2>
+<div>
+    <button type="submit" form="dbform">Delete Selected Items</button>
+    <button type="reset" form="dbform"> Clear All</button>
+</div>
 <table>
     <tr>
-        <th>Select Item</th>
+        <th>Select</th>
         <th>Id</th>
         <th>Name</th>
         <th>Course</th>
@@ -22,10 +26,7 @@
         <th>Edit</th>
     </tr>
     
-    <form action="{{ url_for('cleanDataBase') }}" method="POST">
-        <button type="submit">Delete Selected Items</button>
-        <br>
-        <button type="reset">Clear All</button>
+    <form id="dbform" action="{{ url_for('cleanDataBase') }}" method="POST">
     {% for item in menuItems%}
     <tr>
         <td>
@@ -38,12 +39,13 @@
         <td>{{item.price}}</td>
         <td>{{item.restaurant_id}}</td>
         <td>
-            <button name="itemToEdit" value="{{item.id}}" formaction="{{ url_for('editMenuItemDataBase') }}" formmethod="GET">Edit</button>
+            <button form="dbform" class="databasebutton" name="itemToEdit" value="{{item.id}}" formaction="{{ url_for('editMenuItemDataBase') }}" formmethod="GET">Edit</button>
         </td>
     </tr>
     {% endfor %}
     </form>
 
 </table>
+<a href="#up">Go up</a>
 
 {% endblock %}

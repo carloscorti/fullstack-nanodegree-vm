@@ -166,7 +166,7 @@ def deleteRestaurant(restaurant_id):
             for menuItem in menuItemsToDelete:
                 session.delete(menuItem)
                 session.commit()
-            flash('The restaurant %s was deleted!!' % deletedResto)
+            flash('Restaurant %s was deleted!!' % deletedResto)
             return redirect(url_for('restaurantList'))
         else:
             return render_template('deleteresto.html', resto=resto, restaurant_id=restaurant_id)
